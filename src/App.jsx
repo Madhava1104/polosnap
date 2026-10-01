@@ -257,7 +257,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-[100dvh] lg:h-[100dvh] w-full max-w-[100vw] overflow-x-hidden lg:overflow-hidden bg-[#070b13] text-slate-100 flex flex-col font-sans select-none">
+    <div className="h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] overflow-hidden bg-[#070b13] text-slate-100 flex flex-col font-sans select-none overscroll-none">
       
       {/* Fixed Responsive Navbar */}
       <Navbar
@@ -277,14 +277,14 @@ export default function App() {
         savedCollageCount={savedCollagePhotos.length}
       />
 
-      {/* Main Workspace Layout (Vertical stack on mobile, side-by-side on desktop) */}
+      {/* Main Workspace Layout: Fixed viewport height on mobile, no full-page scrolling! */}
       <main className="flex-1 max-w-[1600px] w-full mx-auto p-1.5 xs:p-2 sm:p-3 lg:p-3 flex flex-col lg:flex-row overflow-hidden min-h-0 gap-2 xs:gap-2.5 sm:gap-4 items-stretch">
         
-        {/* Left Side: Canvas Preview */}
-        <section className={`w-full lg:flex-1 rounded-2xl border border-slate-800/80 p-1.5 sm:p-2 flex flex-col items-center justify-center relative overflow-hidden backdrop-blur-md shadow-2xl transition-all duration-300 ${
+        {/* Top: Fixed Canvas Preview Card (PINNED AT TOP ON MOBILE, NEVER SCROLLS) */}
+        <section className={`w-full rounded-2xl border border-slate-800/80 p-1.5 sm:p-2 flex flex-col items-center justify-between relative overflow-hidden backdrop-blur-md shadow-2xl transition-all duration-300 flex-shrink-0 ${
           mobileView === 'preview' 
-            ? 'flex-1 min-h-[75dvh] lg:h-full bg-slate-950' 
-            : 'h-[36vh] xs:h-[40vh] sm:h-[44vh] lg:h-full min-h-[260px] xs:min-h-[280px] lg:min-h-0 bg-slate-950/70 flex-shrink-0 lg:flex-shrink'
+            ? 'flex-1 h-full min-h-0 bg-slate-950' 
+            : 'h-[44dvh] xs:h-[46dvh] sm:h-[48dvh] lg:h-full lg:flex-1 bg-slate-950/70'
         }`}>
           
           <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -320,141 +320,146 @@ export default function App() {
           />
         </section>
 
-        {/* Right Side: Control Sidebar (Stacks underneath on mobile when split mode) */}
-        <section className={`w-full lg:w-[420px] xl:w-[460px] flex-1 lg:h-full flex-shrink-0 flex flex-col min-h-0 glass-panel border border-slate-800 rounded-2xl p-2.5 sm:p-3.5 overflow-hidden shadow-2xl transition-all duration-300 pb-safe ${
+        {/* Bottom: Control Sidebar (ONLY THIS COMPONENT SCROLLS ON MOBILE) */}
+        <section className={`w-full lg:w-[420px] xl:w-[460px] flex-1 min-h-0 lg:h-full flex-shrink-0 flex flex-col glass-panel border border-slate-800 rounded-2xl p-2 sm:p-3.5 shadow-2xl transition-all duration-300 pb-safe overflow-hidden ${
           mobileView === 'preview' ? 'hidden lg:flex' : 'flex'
         }`}>
           
-          {/* Top Compact Photo Selector */}
-          <div className="mb-2 sm:mb-2.5 pb-2 sm:pb-2.5 border-b border-slate-800/80 flex-shrink-0">
-            <ImageUploader
-              onSelectImage={setPhotoUrl}
-              onOpenCamera={() => setIsCameraOpen(true)}
-              currentPhotoUrl={photoUrl}
-            />
-          </div>
-
-          {/* Main Controls Tab Strip (Responsive 6-column grid with touch-friendly targets) */}
-          <div className="grid grid-cols-6 gap-0.5 xs:gap-1 bg-slate-950 p-1 sm:p-1.5 rounded-xl border border-slate-800 flex-shrink-0 mb-2 sm:mb-3">
+          {/* Scrollable Container on mobile: controls scroll smoothly inside this container */}
+          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar touch-pan-y pr-1 sm:pr-2 space-y-2 sm:space-y-3">
             
-            <button
-              onClick={() => setActiveTab('presets')}
-              className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-0.5 sm:px-1 rounded-lg text-[9px] xs:text-[10px] sm:text-[11px] font-semibold transition-all active:scale-95 ${
-                activeTab === 'presets'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
-              <span>Presets</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('frame')}
-              className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-0.5 sm:px-1 rounded-lg text-[9px] xs:text-[10px] sm:text-[11px] font-semibold transition-all active:scale-95 ${
-                activeTab === 'frame'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Frame className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
-              <span>Frame</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('filter')}
-              className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-0.5 sm:px-1 rounded-lg text-[9px] xs:text-[10px] sm:text-[11px] font-semibold transition-all active:scale-95 ${
-                activeTab === 'filter'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Sliders className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
-              <span>Filters</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('caption')}
-              className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-0.5 sm:px-1 rounded-lg text-[9px] xs:text-[10px] sm:text-[11px] font-semibold transition-all active:scale-95 ${
-                activeTab === 'caption'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Type className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
-              <span>Text</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('decorations')}
-              className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-0.5 sm:px-1 rounded-lg text-[9px] xs:text-[10px] sm:text-[11px] font-semibold transition-all active:scale-95 ${
-                activeTab === 'decorations'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Bookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
-              <span>Deco</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('transform')}
-              className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-0.5 sm:px-1 rounded-lg text-[9px] xs:text-[10px] sm:text-[11px] font-semibold transition-all active:scale-95 ${
-                activeTab === 'transform'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Move className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
-              <span>Crop</span>
-            </button>
-
-          </div>
-
-          {/* Active Tab Panel (Smooth touch-scrollable, zero text overlap) */}
-          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar touch-pan-y pr-1 sm:pr-2 space-y-3 sm:space-y-4">
-            {activeTab === 'presets' && (
-              <PresetsTab
-                currentPresetId={activePresetId}
-                onApplyPreset={handleApplyPreset}
+            {/* Top Photo Selector */}
+            <div className="pb-2 border-b border-slate-800/80">
+              <ImageUploader
+                onSelectImage={setPhotoUrl}
+                onOpenCamera={() => setIsCameraOpen(true)}
+                currentPhotoUrl={photoUrl}
               />
-            )}
-            {activeTab === 'frame' && (
-              <FrameTab
-                settings={settings}
-                onChange={handleUpdateSettings}
-              />
-            )}
-            {activeTab === 'filter' && (
-              <FilterTab
-                settings={settings}
-                onChange={handleUpdateSettings}
-                onAutoEnhance={handleAutoEnhance}
-              />
-            )}
-            {activeTab === 'caption' && (
-              <CaptionTab
-                settings={settings}
-                onChange={handleUpdateSettings}
-              />
-            )}
-            {activeTab === 'decorations' && (
-              <DecorationsTab
-                settings={settings}
-                onChange={handleUpdateSettings}
-              />
-            )}
-            {activeTab === 'transform' && (
-              <TransformTab
-                settings={settings}
-                onChange={handleUpdateSettings}
-              />
-            )}
-          </div>
+            </div>
 
-          {/* Desktop-only Keyboard Shortcuts Tag */}
-          <div className="hidden lg:flex mt-2 pt-2 border-t border-slate-800/80 items-center justify-between text-[10px] text-slate-500 flex-shrink-0">
-            <span>Shortcuts: <kbd className="px-1 py-0.5 bg-slate-800 rounded text-slate-300 font-mono">Ctrl+Z</kbd> Undo | <kbd className="px-1 py-0.5 bg-slate-800 rounded text-slate-300 font-mono">Ctrl+Y</kbd> Redo | <kbd className="px-1 py-0.5 bg-slate-800 rounded text-slate-300 font-mono">F</kbd> Flip</span>
+            {/* Sticky Main Controls Tab Strip */}
+            <div className="sticky top-0 z-20 grid grid-cols-6 gap-0.5 xs:gap-1 bg-slate-950/95 backdrop-blur-md p-1 sm:p-1.5 rounded-xl border border-slate-800 shadow-md">
+              
+              <button
+                onClick={() => setActiveTab('presets')}
+                className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-0.5 sm:px-1 rounded-lg text-[9px] xs:text-[10px] sm:text-[11px] font-semibold transition-all active:scale-95 ${
+                  activeTab === 'presets'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
+                <span>Presets</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('frame')}
+                className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-0.5 sm:px-1 rounded-lg text-[9px] xs:text-[10px] sm:text-[11px] font-semibold transition-all active:scale-95 ${
+                  activeTab === 'frame'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Frame className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
+                <span>Frame</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('filter')}
+                className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-0.5 sm:px-1 rounded-lg text-[9px] xs:text-[10px] sm:text-[11px] font-semibold transition-all active:scale-95 ${
+                  activeTab === 'filter'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Sliders className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
+                <span>Filters</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('caption')}
+                className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-0.5 sm:px-1 rounded-lg text-[9px] xs:text-[10px] sm:text-[11px] font-semibold transition-all active:scale-95 ${
+                  activeTab === 'caption'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Type className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
+                <span>Text</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('decorations')}
+                className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-0.5 sm:px-1 rounded-lg text-[9px] xs:text-[10px] sm:text-[11px] font-semibold transition-all active:scale-95 ${
+                  activeTab === 'decorations'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Bookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
+                <span>Deco</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('transform')}
+                className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-0.5 sm:px-1 rounded-lg text-[9px] xs:text-[10px] sm:text-[11px] font-semibold transition-all active:scale-95 ${
+                  activeTab === 'transform'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Move className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
+                <span>Crop</span>
+              </button>
+
+            </div>
+
+            {/* Active Tab Panel */}
+            <div className="space-y-3 sm:space-y-4 pt-1">
+              {activeTab === 'presets' && (
+                <PresetsTab
+                  currentPresetId={activePresetId}
+                  onApplyPreset={handleApplyPreset}
+                />
+              )}
+              {activeTab === 'frame' && (
+                <FrameTab
+                  settings={settings}
+                  onChange={handleUpdateSettings}
+                />
+              )}
+              {activeTab === 'filter' && (
+                <FilterTab
+                  settings={settings}
+                  onChange={handleUpdateSettings}
+                  onAutoEnhance={handleAutoEnhance}
+                />
+              )}
+              {activeTab === 'caption' && (
+                <CaptionTab
+                  settings={settings}
+                  onChange={handleUpdateSettings}
+                />
+              )}
+              {activeTab === 'decorations' && (
+                <DecorationsTab
+                  settings={settings}
+                  onChange={handleUpdateSettings}
+                />
+              )}
+              {activeTab === 'transform' && (
+                <TransformTab
+                  settings={settings}
+                  onChange={handleUpdateSettings}
+                />
+              )}
+            </div>
+
+            {/* Desktop-only Keyboard Shortcuts Tag */}
+            <div className="hidden lg:flex mt-2 pt-2 border-t border-slate-800/80 items-center justify-between text-[10px] text-slate-500 flex-shrink-0">
+              <span>Shortcuts: <kbd className="px-1 py-0.5 bg-slate-800 rounded text-slate-300 font-mono">Ctrl+Z</kbd> Undo | <kbd className="px-1 py-0.5 bg-slate-800 rounded text-slate-300 font-mono">Ctrl+Y</kbd> Redo | <kbd className="px-1 py-0.5 bg-slate-800 rounded text-slate-300 font-mono">F</kbd> Flip</span>
+            </div>
+
           </div>
 
         </section>

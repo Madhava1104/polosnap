@@ -23,13 +23,15 @@ export default function PolaroidCanvas({
   const [initialZoom, setInitialZoom] = useState(1);
 
   useEffect(() => {
+    // Render at HD scaleFactor (2x) for retina clarity and sharp preview
+    const previewScale = (typeof window !== 'undefined' && (window.devicePixelRatio || 1) >= 1.5) ? 2 : 1.5;
     if (canvasRef.current) {
-      renderPolaroidToCanvas(canvasRef.current, settings, imageObj, 1);
+      renderPolaroidToCanvas(canvasRef.current, settings, imageObj, previewScale);
     }
     if (document.fonts) {
       document.fonts.ready.then(() => {
         if (canvasRef.current) {
-          renderPolaroidToCanvas(canvasRef.current, settings, imageObj, 1);
+          renderPolaroidToCanvas(canvasRef.current, settings, imageObj, previewScale);
         }
       });
     }
@@ -154,14 +156,14 @@ export default function PolaroidCanvas({
   };
 
   return (
-    <div className="relative h-full w-full flex flex-col items-center justify-center overflow-hidden p-1.5 sm:p-2 select-none">
+    <div className="relative h-full w-full flex flex-col items-center justify-between overflow-hidden p-1 sm:p-2 select-none">
       
       {/* Background Studio Glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(30,41,59,0.5)_0,transparent_70%)] pointer-events-none" />
       
-      {/* Canvas Container */}
+      {/* Canvas Container (flex-1 min-h-0 fits dynamically above the toolbar without pushing it) */}
       <div 
-        className="relative group cursor-grab active:cursor-grabbing transition-transform duration-300 max-h-full flex items-center justify-center touch-none"
+        className="flex-1 min-h-0 w-full relative group cursor-grab active:cursor-grabbing transition-transform duration-300 flex items-center justify-center touch-none overflow-hidden py-0.5"
         style={{ transform: `scale(${zoomLevel})` }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -172,11 +174,11 @@ export default function PolaroidCanvas({
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchEnd}
       >
-        <div className="absolute -inset-2 bg-gradient-to-r from-amber-500/15 via-rose-500/15 to-indigo-500/15 rounded-3xl blur-xl opacity-60 group-hover:opacity-90 transition-opacity" />
+        <div className="absolute -inset-2 bg-gradient-to-r from-amber-500/15 via-rose-500/15 to-indigo-500/15 rounded-3xl blur-xl opacity-60 group-hover:opacity-90 transition-opacity pointer-events-none" />
 
         <canvas
           ref={canvasRef}
-          className="relative z-10 rounded-sm polaroid-3d-shadow transition-shadow duration-300 max-h-[38vh] xs:max-h-[44vh] sm:max-h-[50vh] lg:max-h-[calc(100dvh-170px)] max-w-full object-contain pointer-events-auto"
+          className="relative z-10 rounded-sm polaroid-3d-shadow transition-shadow duration-300 max-h-full max-w-full w-auto h-auto object-contain pointer-events-auto"
         />
 
         {!settings.isFlippedBack && (
@@ -187,8 +189,8 @@ export default function PolaroidCanvas({
         )}
       </div>
 
-      {/* Responsive Floating Toolbar */}
-      <div className="mt-2 sm:mt-3 flex items-center flex-wrap justify-center gap-1 sm:gap-2 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-full px-2 sm:px-3 py-1 sm:py-1.5 shadow-xl z-20 flex-shrink-0 max-w-full">
+      {/* Responsive Floating Toolbar (fixed height at bottom of card) */}
+      <div className="mt-1 sm:mt-1.5 flex items-center flex-wrap justify-center gap-1 sm:gap-1.5 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-full px-2 sm:px-3 py-1 shadow-xl z-20 flex-shrink-0 max-w-full">
         {/* Zoom Controls */}
         <div className="flex items-center space-x-0.5">
           <button
