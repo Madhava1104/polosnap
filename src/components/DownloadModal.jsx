@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
 import { renderPolaroidToCanvas } from '../utils/canvasRenderer';
-import { Download, Copy, X, Sparkles, Check, Image as ImageIcon } from 'lucide-react';
+import { Download, Copy, X, Sparkles, Check } from 'lucide-react';
 
 export default function DownloadModal({ isOpen, onClose, settings, imageObj }) {
   const [resolution, setResolution] = useState(2); // 1x, 2x HD, 4x Ultra
@@ -75,14 +75,14 @@ export default function DownloadModal({ isOpen, onClose, settings, imageObj }) {
   const dims = getTargetDimensions();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-lg glass-panel rounded-3xl p-6 border border-slate-700/80 shadow-2xl space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
+      <div className="relative w-full max-w-lg glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-700/80 shadow-2xl space-y-4 sm:space-y-5 max-h-[92dvh] overflow-y-auto custom-scrollbar my-auto">
         
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-800">
           <div className="flex items-center space-x-2">
-            <Sparkles className="w-5 h-5 text-amber-400" />
-            <h3 className="font-semibold text-slate-100">Export High-Res Polaroid</h3>
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+            <h3 className="font-semibold text-sm sm:text-base text-slate-100">Export High-Res Polaroid</h3>
           </div>
           <button
             onClick={onClose}
@@ -94,28 +94,28 @@ export default function DownloadModal({ isOpen, onClose, settings, imageObj }) {
 
         {/* Export Resolution Selector */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2.5">
+          <label className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2">
             Export Quality & Scale
           </label>
-          <div className="grid grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 sm:gap-2.5">
             {[
-              { scale: 1, name: 'Standard (1x)', desc: '600px width (Fast)' },
-              { scale: 2, name: 'HD Quality (2x)', desc: '1200px width (Recommended)' },
-              { scale: 4, name: 'Ultra HD Print (4x)', desc: '2400px+ Print Ready' }
+              { scale: 1, name: 'Standard (1x)', desc: '600px (Fast)' },
+              { scale: 2, name: 'HD Quality (2x)', desc: '1200px (Recommended)' },
+              { scale: 4, name: 'Ultra HD (4x)', desc: '2400px+ Print Ready' }
             ].map((res) => {
               const isSelected = resolution === res.scale;
               return (
                 <button
                   key={res.scale}
                   onClick={() => setResolution(res.scale)}
-                  className={`p-3 rounded-2xl border text-left transition-all ${
+                  className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border text-left transition-all ${
                     isSelected
                       ? 'bg-amber-500/10 border-amber-500 text-amber-300 ring-1 ring-amber-500/30'
                       : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
                   }`}
                 >
                   <p className="text-xs font-semibold">{res.name}</p>
-                  <p className="text-[10px] text-slate-400 mt-1">{res.desc}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">{res.desc}</p>
                 </button>
               );
             })}
@@ -124,27 +124,27 @@ export default function DownloadModal({ isOpen, onClose, settings, imageObj }) {
 
         {/* Format Selector */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2.5">
+          <label className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2">
             File Format
           </label>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
             {[
-              { id: 'png', name: 'PNG (Lossless & Crisp)', desc: 'Best for transparency & detail' },
-              { id: 'jpeg', name: 'JPG / JPEG (Compact)', desc: 'Smaller file size' }
+              { id: 'png', name: 'PNG (Crisp & Lossless)', desc: 'Full quality' },
+              { id: 'jpeg', name: 'JPG / JPEG', desc: 'Compact size' }
             ].map((f) => {
               const isSelected = format === f.id;
               return (
                 <button
                   key={f.id}
                   onClick={() => setFormat(f.id)}
-                  className={`p-3 rounded-2xl border text-left transition-all ${
+                  className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border text-left transition-all ${
                     isSelected
                       ? 'bg-indigo-500/10 border-indigo-500 text-indigo-300 ring-1 ring-indigo-500/30'
                       : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
                   }`}
                 >
                   <p className="text-xs font-semibold">{f.name}</p>
-                  <p className="text-[10px] text-slate-400 mt-1">{f.desc}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">{f.desc}</p>
                 </button>
               );
             })}
@@ -152,25 +152,25 @@ export default function DownloadModal({ isOpen, onClose, settings, imageObj }) {
         </div>
 
         {/* Dimension Badge Info */}
-        <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs text-slate-400">
-          <span>Output Canvas Dimensions:</span>
+        <div className="bg-slate-900/90 p-2.5 sm:p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs text-slate-400">
+          <span>Output Canvas:</span>
           <span className="font-mono text-amber-400 font-semibold">{dims.width} × {dims.height} px</span>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center space-x-3 pt-2">
+        <div className="flex flex-col xs:flex-row items-center gap-2 sm:gap-3 pt-1 sm:pt-2">
           <button
             onClick={handleCopyToClipboard}
-            className="flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all"
+            className="w-full xs:flex-1 flex items-center justify-center space-x-2 py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all active:scale-95"
           >
             {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-indigo-400" />}
-            <span>{copied ? 'Copied to Clipboard!' : 'Copy Image'}</span>
+            <span>{copied ? 'Copied!' : 'Copy Image'}</span>
           </button>
 
           <button
             onClick={handleDownload}
             disabled={isExporting}
-            className="flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 text-white text-xs font-semibold shadow-lg shadow-rose-500/25 transition-all"
+            className="w-full xs:flex-1 flex items-center justify-center space-x-2 py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 text-white text-xs font-semibold shadow-lg shadow-rose-500/25 transition-all active:scale-95"
           >
             <Download className="w-4 h-4" />
             <span>{isExporting ? 'Generating...' : 'Download Image'}</span>

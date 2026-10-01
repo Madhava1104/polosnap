@@ -119,14 +119,14 @@ export default function CustomColorPicker({ value, onChange, label = 'Color' }) 
 
       {/* Floating Modal Popup Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-xs glass-panel rounded-3xl p-4 border border-slate-700 shadow-2xl space-y-3.5 animate-scaleUp">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-fadeIn">
+          <div className="relative w-full max-w-[330px] glass-panel rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border border-slate-700 shadow-2xl space-y-3 animate-scaleUp max-h-[90dvh] overflow-y-auto custom-scrollbar">
             
             {/* Header */}
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>{label} Studio Palette</span>
+                <span className="truncate">{label} Studio Palette</span>
               </span>
               <button
                 onClick={() => setIsOpen(false)}

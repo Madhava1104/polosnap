@@ -56,7 +56,7 @@ export default function FrameTab({ settings, onChange }) {
           <Grid className="w-4 h-4 text-rose-400" />
           <span>Frame Pattern Fills</span>
         </label>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
           {[
             { id: 'none', name: 'Solid' },
             { id: 'dots', name: 'Dots' },
@@ -68,7 +68,7 @@ export default function FrameTab({ settings, onChange }) {
               <button
                 key={pat.id}
                 onClick={() => onChange({ framePattern: pat.id })}
-                className={`py-2 px-2 rounded-xl border text-center font-medium transition-all duration-200 ${
+                className={`py-2 px-1 rounded-xl border text-center text-[10px] sm:text-xs font-medium transition-all duration-200 truncate ${
                   isSelected
                     ? 'bg-rose-500/20 border-rose-500 text-rose-300 font-semibold shadow-md shadow-rose-500/10 ring-1 ring-rose-500/30'
                     : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'

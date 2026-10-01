@@ -1,8 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { 
   Grid, X, Download, Sparkles, Layers, Trash2, 
-  RotateCw, RotateCcw, ChevronLeft, ChevronRight, Plus, Upload, 
-  Image as ImageIcon, Pin, Film, LayoutTemplate
+  Plus, Image as ImageIcon, Pin, Film, LayoutTemplate
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -259,28 +258,28 @@ export default function BatchCollageModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 lg:p-6 bg-slate-950/85 backdrop-blur-md animate-fadeIn overflow-y-auto">
-      <div className="relative w-full max-w-6xl glass-panel rounded-3xl p-4 lg:p-6 border border-slate-700/80 shadow-2xl space-y-4 my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 lg:p-6 bg-slate-950/85 backdrop-blur-md animate-fadeIn overflow-y-auto">
+      <div className="relative w-full max-w-6xl glass-panel rounded-2xl sm:rounded-3xl p-3 sm:p-5 lg:p-6 border border-slate-700/80 shadow-2xl space-y-3 sm:space-y-4 my-auto max-h-[94dvh] overflow-y-auto custom-scrollbar">
         
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30">
-              <Grid className="w-5 h-5" />
+        <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-slate-800">
+          <div className="flex items-center space-x-2 sm:space-x-2.5 min-w-0">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex-shrink-0">
+              <Grid className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <h3 className="font-bold text-base text-slate-100 flex items-center space-x-2">
+            <div className="min-w-0">
+              <h3 className="font-bold text-sm sm:text-base text-slate-100 flex items-center space-x-1.5 sm:space-x-2">
                 <span>Collage Studio</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 font-mono border border-slate-700">
-                  {savedPhotos.length}/4 Saved
+                <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 font-mono border border-slate-700 flex-shrink-0">
+                  {savedPhotos.length}/4
                 </span>
               </h3>
-              <p className="text-xs text-slate-400">Organize, customize angles & export your multi-photo Polaroid story</p>
+              <p className="text-[10px] sm:text-xs text-slate-400 truncate">Organize & export your multi-photo Polaroid collage</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors flex-shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -403,7 +402,7 @@ export default function BatchCollageModal({
               </div>
 
               {/* Photo Cards List inside modal */}
-              <div className="space-y-2.5 max-h-[380px] overflow-y-auto custom-scrollbar pr-1">
+              <div className="space-y-2 sm:space-y-2.5 max-h-[220px] sm:max-h-[360px] overflow-y-auto custom-scrollbar pr-1">
                 {savedPhotos.map((photo, index) => (
                   <div
                     key={photo.id || index}

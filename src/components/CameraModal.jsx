@@ -21,7 +21,11 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
     setError(null);
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: { ideal: 1920 }, height: { ideal: 1080 } } 
+        video: { 
+          width: { ideal: 1920 }, 
+          height: { ideal: 1080 },
+          facingMode: 'user'
+        } 
       });
       setStream(mediaStream);
       if (videoRef.current) {
@@ -70,14 +74,14 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-xl glass-panel rounded-3xl p-6 border border-slate-700/80 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
+      <div className="relative w-full max-w-xl glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-700/80 shadow-2xl max-h-[92dvh] overflow-y-auto custom-scrollbar my-auto">
         
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-800">
           <div className="flex items-center space-x-2">
-            <Camera className="w-5 h-5 text-indigo-400" />
-            <h3 className="font-semibold text-slate-100">Webcam Snapshot</h3>
+            <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
+            <h3 className="font-semibold text-sm sm:text-base text-slate-100">Webcam Snapshot</h3>
           </div>
           <button
             onClick={onClose}

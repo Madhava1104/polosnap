@@ -21,14 +21,14 @@ export default function FilterTab({ settings, onChange, onAutoEnhance }) {
           <Sparkles className="w-4 h-4 text-amber-400" />
           <span>Color Filter Presets</span>
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
           {PHOTO_FILTERS.map((f) => {
             const isSelected = settings.filter === f.id;
             return (
               <button
                 key={f.id}
                 onClick={() => onChange({ filter: f.id })}
-                className={`py-2.5 px-2.5 rounded-xl border text-center font-medium transition-all duration-200 ${
+                className={`py-2 sm:py-2.5 px-1.5 sm:px-2.5 rounded-xl border text-center text-[11px] sm:text-xs font-medium transition-all duration-200 truncate ${
                   isSelected
                     ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-semibold shadow-md shadow-amber-500/10 ring-1 ring-amber-500/30'
                     : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-800/80 hover:scale-[1.02]'

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Upload, Camera, Sparkles, Check, Loader2, AlertCircle, ShieldAlert } from 'lucide-react';
+import { Upload, Camera, Sparkles, Check, Loader2, ShieldAlert } from 'lucide-react';
 import { SAMPLE_PHOTOS } from '../constants/presets';
 import { uploadImageFile } from '../utils/uploadHelper';
 
@@ -93,7 +93,7 @@ export default function ImageUploader({ onSelectImage, onOpenCamera, currentPhot
       )}
 
       {/* Prominent Hero Upload Card & Action Row */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
         {/* Main Big Drag & Drop / Upload Photo Zone */}
         <button
           type="button"
@@ -102,7 +102,7 @@ export default function ImageUploader({ onSelectImage, onOpenCamera, currentPhot
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           disabled={isUploading}
-          className={`col-span-2 relative py-3.5 px-3 rounded-2xl border-2 border-dashed transition-all duration-200 flex items-center justify-center space-x-3 group text-left shadow-lg ${
+          className={`col-span-2 relative py-2.5 sm:py-3 px-2 sm:px-3 rounded-2xl border-2 border-dashed transition-all duration-200 flex items-center justify-center space-x-2 sm:space-x-3 group text-left shadow-lg ${
             isUploading
               ? 'border-amber-500/80 bg-amber-950/40 cursor-wait'
               : isDraggingOver
@@ -111,32 +111,32 @@ export default function ImageUploader({ onSelectImage, onOpenCamera, currentPhot
           }`}
         >
           {isUploading ? (
-            <div className="flex items-center space-x-2.5 py-0.5">
-              <Loader2 className="w-6 h-6 text-amber-400 animate-spin flex-shrink-0" />
-              <div>
-                <span className="text-xs font-bold text-amber-300 block">
-                  Uploading High Quality... {uploadProgress}%
+            <div className="flex items-center space-x-2 py-0.5">
+              <Loader2 className="w-5 h-5 text-amber-400 animate-spin flex-shrink-0" />
+              <div className="min-w-0">
+                <span className="text-[11px] sm:text-xs font-bold text-amber-300 block truncate">
+                  Uploading... {uploadProgress}%
                 </span>
-                <span className="text-[10px] text-slate-400 block">
-                  Saving to project folder...
+                <span className="text-[9px] sm:text-[10px] text-slate-400 block truncate">
+                  Saving photo...
                 </span>
               </div>
             </div>
           ) : (
             <>
               {/* Pulsing Icon Badge */}
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 p-0.5 shadow-md flex-shrink-0 group-hover:scale-110 transition-transform">
-                <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                  <Upload className="w-5 h-5 text-amber-400" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 p-0.5 shadow-md flex-shrink-0 group-hover:scale-110 transition-transform">
+                <div className="w-full h-full bg-slate-950 rounded-[9px] sm:rounded-[10px] flex items-center justify-center">
+                  <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
                 </div>
               </div>
 
               <div className="truncate min-w-0">
-                <span className="text-xs font-bold text-slate-100 group-hover:text-amber-300 transition-colors block truncate">
-                  Upload Custom Photo
+                <span className="text-[11px] sm:text-xs font-bold text-slate-100 group-hover:text-amber-300 transition-colors block truncate">
+                  Upload Photo
                 </span>
-                <span className="text-[10px] font-medium text-slate-400 block truncate">
-                  JPG, PNG, WEBP (Original Quality)
+                <span className="text-[9px] sm:text-[10px] font-medium text-slate-400 block truncate">
+                  JPG, PNG, WEBP
                 </span>
               </div>
             </>
@@ -151,10 +151,10 @@ export default function ImageUploader({ onSelectImage, onOpenCamera, currentPhot
           className="flex flex-col items-center justify-center p-2 rounded-2xl bg-indigo-950/70 hover:bg-indigo-900/90 border border-indigo-700/60 text-indigo-300 transition-all active:scale-95 group shadow-md disabled:opacity-50"
           title="Take photo with webcam"
         >
-          <div className="w-8 h-8 rounded-xl bg-indigo-900/80 border border-indigo-500/40 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
-            <Camera className="w-4 h-4 text-indigo-400" />
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-indigo-900/80 border border-indigo-500/40 flex items-center justify-center mb-0.5 sm:mb-1 group-hover:scale-110 transition-transform">
+            <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400" />
           </div>
-          <span className="text-[11px] font-semibold text-slate-200">Webcam</span>
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-200">Webcam</span>
         </button>
       </div>
 
