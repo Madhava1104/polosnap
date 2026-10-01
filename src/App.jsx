@@ -257,7 +257,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] overflow-hidden bg-[#070b13] text-slate-100 flex flex-col font-sans select-none overscroll-none">
+    <div className="fixed inset-0 h-full w-full overflow-hidden bg-[#070b13] text-slate-100 flex flex-col font-sans select-none overscroll-none">
       
       {/* Fixed Responsive Navbar */}
       <Navbar
@@ -281,7 +281,7 @@ export default function App() {
       <main className="flex-1 max-w-[1600px] w-full mx-auto p-1.5 xs:p-2 sm:p-3 lg:p-3 flex flex-col lg:flex-row overflow-hidden min-h-0 gap-2 xs:gap-2.5 sm:gap-4 items-stretch">
         
         {/* Top: Fixed Canvas Preview Card (PINNED AT TOP ON MOBILE, NEVER SCROLLS) */}
-        <section className={`w-full rounded-2xl border border-slate-800/80 p-1.5 sm:p-2 flex flex-col items-center justify-between relative overflow-hidden backdrop-blur-md shadow-2xl transition-all duration-300 flex-shrink-0 ${
+        <section className={`w-full rounded-2xl border border-slate-800/80 p-1.5 sm:p-2 flex flex-col items-center justify-between relative overflow-hidden backdrop-blur-md shadow-2xl transition-all duration-300 flex-shrink-0 touch-none overscroll-none ${
           mobileView === 'preview' 
             ? 'flex-1 h-full min-h-0 bg-slate-950' 
             : 'h-[44dvh] xs:h-[46dvh] sm:h-[48dvh] lg:h-full lg:flex-1 bg-slate-950/70'
@@ -321,12 +321,12 @@ export default function App() {
         </section>
 
         {/* Bottom: Control Sidebar (ONLY THIS COMPONENT SCROLLS ON MOBILE) */}
-        <section className={`w-full lg:w-[420px] xl:w-[460px] flex-1 min-h-0 lg:h-full flex-shrink-0 flex flex-col glass-panel border border-slate-800 rounded-2xl p-2 sm:p-3.5 shadow-2xl transition-all duration-300 pb-safe overflow-hidden ${
+        <section className={`w-full lg:w-[420px] xl:w-[460px] flex-1 min-h-0 lg:h-full flex-shrink-0 flex flex-col glass-panel border border-slate-800 rounded-2xl p-2 sm:p-3.5 shadow-2xl transition-all duration-300 pb-safe overflow-hidden overscroll-none ${
           mobileView === 'preview' ? 'hidden lg:flex' : 'flex'
         }`}>
           
           {/* Scrollable Container on mobile: controls scroll smoothly inside this container */}
-          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar touch-pan-y pr-1 sm:pr-2 space-y-2 sm:space-y-3">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar touch-pan-y pr-1 sm:pr-2 space-y-2 sm:space-y-3">
             
             {/* Top Photo Selector */}
             <div className="pb-2 border-b border-slate-800/80">
