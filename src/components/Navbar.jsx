@@ -82,15 +82,15 @@ export default function Navbar({
             <span className="hidden sm:inline">Presets</span>
           </button>
 
-          {/* Camera Webcam Button */}
+          {/* Camera Button */}
           <button
             onClick={onOpenCamera}
             className="flex items-center space-x-1 p-1.5 sm:px-2 sm:py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition-all active:scale-95 flex-shrink-0"
-            title="Take Photo with Webcam"
-            aria-label="Take Photo with Webcam"
+            title="Take Photo with Camera"
+            aria-label="Take Photo with Camera"
           >
             <Camera className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden md:inline">Webcam</span>
+            <span className="hidden md:inline">Camera</span>
           </button>
 
           {/* Multi-Collage Mode Button */}

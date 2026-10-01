@@ -115,10 +115,10 @@ export default function ImageUploader({ onSelectImage, onOpenCamera, currentPhot
               <Loader2 className="w-5 h-5 text-amber-400 animate-spin flex-shrink-0" />
               <div className="min-w-0">
                 <span className="text-[11px] sm:text-xs font-bold text-amber-300 block truncate">
-                  Uploading... {uploadProgress}%
+                  Loading Photo...
                 </span>
                 <span className="text-[9px] sm:text-[10px] text-slate-400 block truncate">
-                  Saving photo...
+                  Applying to Polaroid...
                 </span>
               </div>
             </div>
@@ -143,18 +143,18 @@ export default function ImageUploader({ onSelectImage, onOpenCamera, currentPhot
           )}
         </button>
 
-        {/* Webcam Action Button */}
+        {/* Camera Action Button */}
         <button
           type="button"
           onClick={onOpenCamera}
           disabled={isUploading}
           className="flex flex-col items-center justify-center p-2 rounded-2xl bg-indigo-950/70 hover:bg-indigo-900/90 border border-indigo-700/60 text-indigo-300 transition-all active:scale-95 group shadow-md disabled:opacity-50"
-          title="Take photo with webcam"
+          title="Take photo with camera"
         >
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-indigo-900/80 border border-indigo-500/40 flex items-center justify-center mb-0.5 sm:mb-1 group-hover:scale-110 transition-transform">
             <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400" />
           </div>
-          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-200">Webcam</span>
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-200">Camera</span>
         </button>
       </div>
 
