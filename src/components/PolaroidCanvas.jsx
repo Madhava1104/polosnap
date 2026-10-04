@@ -11,16 +11,26 @@ export default function PolaroidCanvas({
   onSaveToCollage
 }) {
   const canvasRef = useRef(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [initialOffset, setInitialOffset] = useState({ x: 0, y: 0 });
   const [zoomLevel, setZoomLevel] = useState(1);
   const [justSaved, setJustSaved] = useState(false);
   const animFrameRef = useRef(null);
 
-  const [isPinching, setIsPinching] = useState(false);
-  const [initialPinchDist, setInitialPinchDist] = useState(0);
-  const [initialZoom, setInitialZoom] = useState(1);
+  const dragRef = useRef({
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    initX: 0,
+    initY: 0,
+    latestX: 0,
+    latestY: 0
+  });
+
+  const touchRef = useRef({
+    isPinching: false,
+    initialPinchDist: 0,
+    initialZoom: 1,
+    latestZoom: 1
+  });
 
   useEffect(() => {
     // Render at HD scaleFactor (2x) for retina clarity and sharp preview
@@ -28,45 +38,66 @@ export default function PolaroidCanvas({
     if (canvasRef.current) {
       renderPolaroidToCanvas(canvasRef.current, settings, imageObj, previewScale);
     }
-    if (document.fonts) {
+  }, [settings, imageObj]);
+
+  // Re-render when web fonts complete loading (separated to avoid duplicate renders during dragging)
+  useEffect(() => {
+    if (typeof document !== 'undefined' && document.fonts) {
+      let isMounted = true;
       document.fonts.ready.then(() => {
-        if (canvasRef.current) {
+        if (isMounted && canvasRef.current) {
+          const previewScale = (typeof window !== 'undefined' && (window.devicePixelRatio || 1) >= 1.5) ? 2 : 1.5;
           renderPolaroidToCanvas(canvasRef.current, settings, imageObj, previewScale);
         }
       });
+      return () => { isMounted = false; };
     }
-  }, [settings, imageObj]);
+  }, [settings.font]);
 
   const handleMouseDown = (e) => {
     if (settings.isFlippedBack) return;
+    dragRef.current = {
+      isDragging: true,
+      startX: e.clientX,
+      startY: e.clientY,
+      initX: settings.offsetX || 0,
+      initY: settings.offsetY || 0,
+      latestX: settings.offsetX || 0,
+      latestY: settings.offsetY || 0
+    };
     setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
-    setInitialOffset({ x: settings.offsetX || 0, y: settings.offsetY || 0 });
   };
 
   const handleMouseMove = (e) => {
-    if (!isDragging || settings.isFlippedBack) return;
-    const dx = e.clientX - dragStart.x;
-    const dy = e.clientY - dragStart.y;
-    
-    if (animFrameRef.current) {
-      cancelAnimationFrame(animFrameRef.current);
-    }
+    if (!dragRef.current.isDragging || settings.isFlippedBack) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
 
-    animFrameRef.current = requestAnimationFrame(() => {
-      onUpdateTransform({
-        offsetX: Math.round(initialOffset.x + dx),
-        offsetY: Math.round(initialOffset.y + dy)
-      }, false);
-    });
+    dragRef.current.latestX = Math.round(dragRef.current.initX + dx);
+    dragRef.current.latestY = Math.round(dragRef.current.initY + dy);
+
+    if (!animFrameRef.current) {
+      animFrameRef.current = requestAnimationFrame(() => {
+        onUpdateTransform({
+          offsetX: dragRef.current.latestX,
+          offsetY: dragRef.current.latestY
+        }, false);
+        animFrameRef.current = null;
+      });
+    }
   };
 
   const handleMouseUp = () => {
-    if (isDragging) {
+    if (dragRef.current.isDragging) {
+      dragRef.current.isDragging = false;
       setIsDragging(false);
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
       onUpdateTransform({
-        offsetX: settings.offsetX,
-        offsetY: settings.offsetY
+        offsetX: dragRef.current.latestX,
+        offsetY: dragRef.current.latestY
       }, true);
     }
   };
@@ -83,67 +114,89 @@ export default function PolaroidCanvas({
     if (settings.isFlippedBack) return;
 
     if (e.touches.length === 1) {
-      setIsDragging(true);
-      setIsPinching(false);
       const touch = e.touches[0];
-      setDragStart({ x: touch.clientX, y: touch.clientY });
-      setInitialOffset({ x: settings.offsetX || 0, y: settings.offsetY || 0 });
+      dragRef.current = {
+        isDragging: true,
+        startX: touch.clientX,
+        startY: touch.clientY,
+        initX: settings.offsetX || 0,
+        initY: settings.offsetY || 0,
+        latestX: settings.offsetX || 0,
+        latestY: settings.offsetY || 0
+      };
+      touchRef.current.isPinching = false;
+      setIsDragging(true);
     } else if (e.touches.length === 2) {
+      dragRef.current.isDragging = false;
       setIsDragging(false);
-      setIsPinching(true);
       const dist = getTouchDistance(e.touches[0], e.touches[1]);
-      setInitialPinchDist(dist);
-      setInitialZoom(settings.zoom || 1);
+      touchRef.current = {
+        isPinching: true,
+        initialPinchDist: dist,
+        initialZoom: settings.zoom || 1,
+        latestZoom: settings.zoom || 1
+      };
     }
   };
 
   const handleTouchMove = (e) => {
     if (settings.isFlippedBack) return;
 
-    if (isDragging && e.touches.length === 1) {
+    if (dragRef.current.isDragging && e.touches.length === 1) {
       e.preventDefault();
       const touch = e.touches[0];
-      const dx = touch.clientX - dragStart.x;
-      const dy = touch.clientY - dragStart.y;
+      const dx = touch.clientX - dragRef.current.startX;
+      const dy = touch.clientY - dragRef.current.startY;
+      dragRef.current.latestX = Math.round(dragRef.current.initX + dx);
+      dragRef.current.latestY = Math.round(dragRef.current.initY + dy);
 
-      if (animFrameRef.current) {
-        cancelAnimationFrame(animFrameRef.current);
+      if (!animFrameRef.current) {
+        animFrameRef.current = requestAnimationFrame(() => {
+          onUpdateTransform({
+            offsetX: dragRef.current.latestX,
+            offsetY: dragRef.current.latestY
+          }, false);
+          animFrameRef.current = null;
+        });
       }
-
-      animFrameRef.current = requestAnimationFrame(() => {
-        onUpdateTransform({
-          offsetX: Math.round(initialOffset.x + dx),
-          offsetY: Math.round(initialOffset.y + dy)
-        }, false);
-      });
-    } else if (isPinching && e.touches.length === 2) {
+    } else if (touchRef.current.isPinching && e.touches.length === 2) {
       e.preventDefault();
       const currentDist = getTouchDistance(e.touches[0], e.touches[1]);
-      if (initialPinchDist > 0) {
-        const factor = currentDist / initialPinchDist;
-        const newZoom = Math.min(3.0, Math.max(0.5, Number((initialZoom * factor).toFixed(2))));
-        
-        if (animFrameRef.current) {
-          cancelAnimationFrame(animFrameRef.current);
+      if (touchRef.current.initialPinchDist > 0) {
+        const factor = currentDist / touchRef.current.initialPinchDist;
+        const newZoom = Math.min(3.0, Math.max(0.5, Number((touchRef.current.initialZoom * factor).toFixed(2))));
+        touchRef.current.latestZoom = newZoom;
+
+        if (!animFrameRef.current) {
+          animFrameRef.current = requestAnimationFrame(() => {
+            onUpdateTransform({ zoom: touchRef.current.latestZoom }, false);
+            animFrameRef.current = null;
+          });
         }
-        animFrameRef.current = requestAnimationFrame(() => {
-          onUpdateTransform({ zoom: newZoom }, false);
-        });
       }
     }
   };
 
   const handleTouchEnd = (e) => {
-    if (isDragging) {
+    if (dragRef.current.isDragging) {
+      dragRef.current.isDragging = false;
       setIsDragging(false);
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
       onUpdateTransform({
-        offsetX: settings.offsetX,
-        offsetY: settings.offsetY
+        offsetX: dragRef.current.latestX,
+        offsetY: dragRef.current.latestY
       }, true);
     }
-    if (isPinching && e.touches.length < 2) {
-      setIsPinching(false);
-      onUpdateTransform({ zoom: settings.zoom }, true);
+    if (touchRef.current.isPinching && e.touches.length < 2) {
+      touchRef.current.isPinching = false;
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
+      onUpdateTransform({ zoom: touchRef.current.latestZoom }, true);
     }
   };
 
@@ -178,7 +231,7 @@ export default function PolaroidCanvas({
 
         <canvas
           ref={canvasRef}
-          className="relative z-10 rounded-sm polaroid-3d-shadow transition-shadow duration-300 max-h-full max-w-full w-auto h-auto object-contain pointer-events-auto"
+          className="relative z-10 rounded-sm polaroid-3d-shadow transition-shadow duration-300 max-h-full max-w-full w-auto h-auto object-contain pointer-events-auto will-change-transform transform-gpu"
         />
 
         {!settings.isFlippedBack && (

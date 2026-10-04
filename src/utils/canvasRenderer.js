@@ -3,9 +3,208 @@
  * GPU-Accelerated, High-Performance Canvas Engine.
  */
 
-// Offscreen Grain Pattern Cache for GPU-accelerated rendering
-let grainCanvasCache = null;
-let grainCacheKey = '';
+// --- OFFSCREEN PATTERN & NOISE CACHES ---
+const patternCache = {
+  paper: null,
+  canvas: null,
+  distressed: null,
+  dots: null,
+  grid: null,
+  grain: {} // Keyed by rounded intensity
+};
+
+function getPaperPattern(ctx) {
+  if (patternCache.paper) return patternCache.paper;
+  const tile = document.createElement('canvas');
+  tile.width = 128;
+  tile.height = 128;
+  const tCtx = tile.getContext('2d');
+  tCtx.fillStyle = 'rgba(0, 0, 0, 0.03)';
+  for (let i = 0; i < 128; i += 4) {
+    for (let j = 0; j < 128; j += 4) {
+      if (Math.random() > 0.5) {
+        tCtx.fillRect(i, j, 2, 2);
+      }
+    }
+  }
+  patternCache.paper = ctx.createPattern(tile, 'repeat');
+  return patternCache.paper;
+}
+
+function getCanvasWeavePattern(ctx) {
+  if (patternCache.canvas) return patternCache.canvas;
+  const tile = document.createElement('canvas');
+  tile.width = 16;
+  tile.height = 16;
+  const tCtx = tile.getContext('2d');
+  tCtx.fillStyle = 'rgba(0, 0, 0, 0.025)';
+  tCtx.fillRect(0, 0, 1, 16);
+  tCtx.fillRect(0, 0, 16, 1);
+  patternCache.canvas = ctx.createPattern(tile, 'repeat');
+  return patternCache.canvas;
+}
+
+function getDistressedPattern(ctx) {
+  if (patternCache.distressed) return patternCache.distressed;
+  const tile = document.createElement('canvas');
+  tile.width = 256;
+  tile.height = 256;
+  const tCtx = tile.getContext('2d');
+  tCtx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
+  tCtx.lineWidth = 1;
+  for (let k = 0; k < 20; k++) {
+    tCtx.beginPath();
+    const sx = Math.random() * 256;
+    const sy = Math.random() * 256;
+    tCtx.moveTo(sx, sy);
+    tCtx.lineTo(sx + (Math.random() - 0.5) * 60, sy + (Math.random() - 0.5) * 60);
+    tCtx.stroke();
+  }
+  patternCache.distressed = ctx.createPattern(tile, 'repeat');
+  return patternCache.distressed;
+}
+
+function getDotsPattern(ctx) {
+  if (patternCache.dots) return patternCache.dots;
+  const tile = document.createElement('canvas');
+  tile.width = 32;
+  tile.height = 32;
+  const tCtx = tile.getContext('2d');
+  tCtx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+  tCtx.beginPath();
+  tCtx.arc(16, 16, 3, 0, Math.PI * 2);
+  tCtx.fill();
+  patternCache.dots = ctx.createPattern(tile, 'repeat');
+  return patternCache.dots;
+}
+
+function getGridPattern(ctx) {
+  if (patternCache.grid) return patternCache.grid;
+  const tile = document.createElement('canvas');
+  tile.width = 32;
+  tile.height = 32;
+  const tCtx = tile.getContext('2d');
+  tCtx.strokeStyle = 'rgba(0, 0, 0, 0.07)';
+  tCtx.lineWidth = 1;
+  tCtx.beginPath();
+  tCtx.moveTo(0, 0);
+  tCtx.lineTo(32, 0);
+  tCtx.moveTo(0, 0);
+  tCtx.lineTo(0, 32);
+  tCtx.stroke();
+  patternCache.grid = ctx.createPattern(tile, 'repeat');
+  return patternCache.grid;
+}
+
+function getGrainPattern(ctx, intensity) {
+  const roundedIntensity = Math.round(intensity);
+  if (patternCache.grain[roundedIntensity]) {
+    return patternCache.grain[roundedIntensity];
+  }
+  const tileSize = 256;
+  const tile = document.createElement('canvas');
+  tile.width = tileSize;
+  tile.height = tileSize;
+  const gCtx = tile.getContext('2d');
+  const imgData = gCtx.createImageData(tileSize, tileSize);
+  const data = imgData.data;
+  
+  for (let i = 0; i < data.length; i += 4) {
+    if (Math.random() < 0.45) {
+      const noise = (Math.random() - 0.5) * roundedIntensity * 2.8;
+      const val = 128 + noise;
+      data[i] = val;
+      data[i + 1] = val;
+      data[i + 2] = val;
+      data[i + 3] = Math.min(255, roundedIntensity * 2.5);
+    }
+  }
+  gCtx.putImageData(imgData, 0, 0);
+  const pattern = ctx.createPattern(tile, 'repeat');
+  patternCache.grain[roundedIntensity] = pattern;
+  return pattern;
+}
+
+let filteredImageCache = {
+  key: '',
+  canvas: null
+};
+
+function getFilteredImageCanvas(sourceImageObj, settings) {
+  if (!sourceImageObj || !sourceImageObj.naturalWidth) return null;
+
+  const brightness = settings.brightness || 0;
+  const contrast = settings.contrast || 0;
+  const saturation = settings.saturation || 0;
+  const blur = settings.blur || 0;
+  const filter = settings.filter || 'none';
+
+  // If no filters are applied, return original image directly
+  if (brightness === 0 && contrast === 0 && saturation === 0 && blur === 0 && filter === 'none') {
+    return sourceImageObj;
+  }
+
+  const key = `${sourceImageObj.src}_${filter}_${brightness}_${contrast}_${saturation}_${blur}`;
+
+  if (filteredImageCache.canvas && filteredImageCache.key === key) {
+    return filteredImageCache.canvas;
+  }
+
+  // Downscale giant images for offscreen filter cache to max 2000px for max GPU performance
+  const srcW = sourceImageObj.naturalWidth;
+  const srcH = sourceImageObj.naturalHeight;
+  const maxDim = 2000;
+  let targetW = srcW;
+  let targetH = srcH;
+
+  if (srcW > maxDim || srcH > maxDim) {
+    if (srcW > srcH) {
+      targetW = maxDim;
+      targetH = Math.round((srcH / srcW) * maxDim);
+    } else {
+      targetH = maxDim;
+      targetW = Math.round((srcW / srcH) * maxDim);
+    }
+  }
+
+  const offscreen = document.createElement('canvas');
+  offscreen.width = targetW;
+  offscreen.height = targetH;
+  const oCtx = offscreen.getContext('2d');
+  if (!oCtx) return sourceImageObj;
+
+  let filterString = `brightness(${100 + brightness}%) contrast(${100 + contrast}%) saturate(${100 + saturation}%) `;
+  if (blur > 0) filterString += `blur(${blur}px) `;
+
+  if (filter === 'vintage') {
+    filterString += `sepia(25%) hue-rotate(-10deg) `;
+  } else if (filter === 'kodak') {
+    filterString += `saturate(125%) contrast(110%) sepia(15%) `;
+  } else if (filter === 'sepia') {
+    filterString += `sepia(75%) `;
+  } else if (filter === 'bw') {
+    filterString += `grayscale(100%) contrast(130%) `;
+  } else if (filter === 'faded') {
+    filterString += `opacity(90%) brightness(105%) contrast(85%) `;
+  } else if (filter === 'cyberpunk') {
+    filterString += `hue-rotate(180deg) saturate(140%) `;
+  } else if (filter === 'cool-drift') {
+    filterString += `hue-rotate(20deg) saturate(90%) `;
+  } else if (filter === 'warm-sunset') {
+    filterString += `sepia(35%) saturate(130%) `;
+  }
+
+  oCtx.filter = filterString.trim() || 'none';
+  oCtx.drawImage(sourceImageObj, 0, 0, targetW, targetH);
+  oCtx.filter = 'none';
+
+  filteredImageCache = {
+    key,
+    canvas: offscreen
+  };
+
+  return offscreen;
+}
 
 export function renderPolaroidToCanvas(canvas, settings, sourceImageObj, scaleFactor = 1) {
   if (!canvas) return;
@@ -13,21 +212,22 @@ export function renderPolaroidToCanvas(canvas, settings, sourceImageObj, scaleFa
   if (!ctx) return;
 
   // Frame Dimensions based on aspect ratio
-  const baseWidth = 600 * scaleFactor;
-  let baseHeight = 730 * scaleFactor;
+  const baseWidth = Math.round(600 * scaleFactor);
+  let baseHeight = Math.round(730 * scaleFactor);
 
   if (settings.aspectRatio === 'instax-mini') {
-    baseHeight = 900 * scaleFactor;
+    baseHeight = Math.round(900 * scaleFactor);
   } else if (settings.aspectRatio === 'instax-wide') {
-    baseHeight = 520 * scaleFactor;
+    baseHeight = Math.round(520 * scaleFactor);
   } else if (settings.aspectRatio === 'square') {
-    baseHeight = 670 * scaleFactor;
+    baseHeight = Math.round(670 * scaleFactor);
   } else if (settings.aspectRatio === 'vintage-postcard') {
-    baseHeight = 820 * scaleFactor;
+    baseHeight = Math.round(820 * scaleFactor);
   }
 
-  canvas.width = baseWidth;
-  canvas.height = baseHeight;
+  // Only update canvas dimensions when they actually change to prevent resetting GPU buffers on every frame
+  if (canvas.width !== baseWidth) canvas.width = baseWidth;
+  if (canvas.height !== baseHeight) canvas.height = baseHeight;
 
   ctx.clearRect(0, 0, baseWidth, baseHeight);
 
@@ -86,6 +286,8 @@ export function renderPolaroidToCanvas(canvas, settings, sourceImageObj, scaleFa
   drawRoundedRect(ctx, photoX, photoY, photoWidth, photoHeight, innerCornerRadius);
   ctx.clip();
 
+
+
   // Inner Photo Placeholder Background
   ctx.fillStyle = '#1e293b';
   ctx.fillRect(photoX, photoY, photoWidth, photoHeight);
@@ -106,7 +308,11 @@ export function renderPolaroidToCanvas(canvas, settings, sourceImageObj, scaleFa
     ctx.rotate(((settings.rotation || 0) * Math.PI) / 180);
     ctx.scale(settings.flipH ? -1 : 1, settings.flipV ? -1 : 1);
 
-    const imgRatio = sourceImageObj.naturalWidth / sourceImageObj.naturalHeight;
+    const drawableImage = getFilteredImageCanvas(sourceImageObj, settings) || sourceImageObj;
+    const drawImgW = drawableImage.width || drawableImage.naturalWidth || sourceImageObj.naturalWidth;
+    const drawImgH = drawableImage.height || drawableImage.naturalHeight || sourceImageObj.naturalHeight;
+
+    const imgRatio = drawImgW / drawImgH;
     const containerRatio = photoWidth / photoHeight;
 
     let drawW, drawH;
@@ -128,36 +334,7 @@ export function renderPolaroidToCanvas(canvas, settings, sourceImageObj, scaleFa
       }
     }
 
-    let filterString = '';
-    const brightness = 100 + (settings.brightness || 0);
-    const contrast = 100 + (settings.contrast || 0);
-    const saturate = 100 + (settings.saturation || 0);
-    const blur = (settings.blur || 0) * scaleFactor;
-
-    filterString += `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturate}%) `;
-    if (blur > 0) filterString += `blur(${blur}px) `;
-
-    if (settings.filter === 'vintage') {
-      filterString += `sepia(25%) hue-rotate(-10deg) `;
-    } else if (settings.filter === 'kodak') {
-      filterString += `saturate(125%) contrast(110%) sepia(15%) `;
-    } else if (settings.filter === 'sepia') {
-      filterString += `sepia(75%) `;
-    } else if (settings.filter === 'bw') {
-      filterString += `grayscale(100%) contrast(130%) `;
-    } else if (settings.filter === 'faded') {
-      filterString += `opacity(90%) brightness(105%) contrast(85%) `;
-    } else if (settings.filter === 'cyberpunk') {
-      filterString += `hue-rotate(180deg) saturate(140%) `;
-    } else if (settings.filter === 'cool-drift') {
-      filterString += `hue-rotate(20deg) saturate(90%) `;
-    } else if (settings.filter === 'warm-sunset') {
-      filterString += `sepia(35%) saturate(130%) `;
-    }
-
-    ctx.filter = filterString.trim() || 'none';
-    ctx.drawImage(sourceImageObj, -drawW / 2, -drawH / 2, drawW, drawH);
-    ctx.filter = 'none';
+    ctx.drawImage(drawableImage, -drawW / 2, -drawH / 2, drawW, drawH);
 
     ctx.restore();
   }
@@ -188,7 +365,7 @@ export function renderPolaroidToCanvas(canvas, settings, sourceImageObj, scaleFa
     ctx.fillRect(photoX, photoY, photoWidth, photoHeight);
   }
 
-  // GPU-Accelerated Grain Noise Rendering
+  // GPU-Accelerated Grain Noise Rendering via Tiled Offscreen Canvas Pattern
   if (settings.grain && settings.grain > 0) {
     drawGrainGPU(ctx, photoX, photoY, photoWidth, photoHeight, settings.grain);
   }
@@ -277,37 +454,16 @@ export function renderPolaroidToCanvas(canvas, settings, sourceImageObj, scaleFa
   }
 }
 
-// GPU-Accelerated Grain Noise Rendering via Offscreen Canvas Cache
+// Fast Tiled GPU Grain Pattern
 function drawGrainGPU(ctx, x, y, width, height, intensity) {
-  const w = Math.round(width);
-  const h = Math.round(height);
-  const cacheKey = `${w}_${h}_${intensity}`;
-
-  if (!grainCanvasCache || grainCacheKey !== cacheKey) {
-    grainCanvasCache = document.createElement('canvas');
-    grainCanvasCache.width = w;
-    grainCanvasCache.height = h;
-    const gCtx = grainCanvasCache.getContext('2d');
-    const imgData = gCtx.createImageData(w, h);
-    const data = imgData.data;
-    
-    for (let i = 0; i < data.length; i += 4) {
-      if (Math.random() < 0.45) {
-        const noise = (Math.random() - 0.5) * intensity * 2.8;
-        const val = 128 + noise;
-        data[i] = val;
-        data[i + 1] = val;
-        data[i + 2] = val;
-        data[i + 3] = Math.min(255, intensity * 2.5);
-      }
-    }
-    gCtx.putImageData(imgData, 0, 0);
-    grainCacheKey = cacheKey;
-  }
+  if (!intensity || intensity <= 0) return;
+  const pattern = getGrainPattern(ctx, intensity);
+  if (!pattern) return;
 
   ctx.save();
   ctx.globalCompositeOperation = 'overlay';
-  ctx.drawImage(grainCanvasCache, x, y);
+  ctx.fillStyle = pattern;
+  ctx.fillRect(x, y, width, height);
   ctx.restore();
 }
 
@@ -400,7 +556,7 @@ function drawPolaroidBack(ctx, width, height, settings, scaleFactor) {
   ctx.restore();
 }
 
-// Helper: Frame Patterns
+// Fast Frame Patterns via Offscreen Canvas
 function drawFramePattern(ctx, width, height, patternType, baseColor, scaleFactor) {
   ctx.save();
   ctx.fillStyle = baseColor;
@@ -411,28 +567,16 @@ function drawFramePattern(ctx, width, height, patternType, baseColor, scaleFacto
   ctx.globalCompositeOperation = 'multiply';
 
   if (patternType === 'dots') {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-    for (let x = 15 * scaleFactor; x < width; x += 25 * scaleFactor) {
-      for (let y = 15 * scaleFactor; y < height; y += 25 * scaleFactor) {
-        ctx.beginPath();
-        ctx.arc(x, y, 3 * scaleFactor, 0, Math.PI * 2);
-        ctx.fill();
-      }
+    const pattern = getDotsPattern(ctx);
+    if (pattern) {
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, width, height);
     }
   } else if (patternType === 'grid') {
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.07)';
-    ctx.lineWidth = 1 * scaleFactor;
-    for (let x = 20 * scaleFactor; x < width; x += 25 * scaleFactor) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
-    }
-    for (let y = 20 * scaleFactor; y < height; y += 25 * scaleFactor) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
+    const pattern = getGridPattern(ctx);
+    if (pattern) {
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, width, height);
     }
   } else if (patternType === 'terrazzo') {
     const colors = ['rgba(239, 68, 68, 0.15)', 'rgba(59, 130, 246, 0.15)', 'rgba(245, 158, 11, 0.15)', 'rgba(16, 185, 129, 0.15)'];
@@ -487,6 +631,7 @@ function drawRoundedRect(ctx, x, y, width, height, radius) {
   ctx.closePath();
 }
 
+// Fast Frame Texture via Offscreen Canvas Pattern
 function drawFrameTexture(ctx, width, height, textureType, scaleFactor) {
   if (!textureType || textureType === 'smooth') return;
 
@@ -494,32 +639,22 @@ function drawFrameTexture(ctx, width, height, textureType, scaleFactor) {
   ctx.globalCompositeOperation = 'multiply';
 
   if (textureType === 'paper') {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
-    for (let i = 0; i < width; i += 4 * scaleFactor) {
-      for (let j = 0; j < height; j += 4 * scaleFactor) {
-        if (Math.random() > 0.5) {
-          ctx.fillRect(i, j, 2 * scaleFactor, 2 * scaleFactor);
-        }
-      }
+    const pattern = getPaperPattern(ctx);
+    if (pattern) {
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, width, height);
     }
   } else if (textureType === 'canvas') {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.025)';
-    for (let i = 0; i < width; i += 6 * scaleFactor) {
-      ctx.fillRect(i, 0, 1 * scaleFactor, height);
-    }
-    for (let j = 0; j < height; j += 6 * scaleFactor) {
-      ctx.fillRect(0, j, width, 1 * scaleFactor);
+    const pattern = getCanvasWeavePattern(ctx);
+    if (pattern) {
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, width, height);
     }
   } else if (textureType === 'distressed') {
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
-    ctx.lineWidth = 1 * scaleFactor;
-    for (let k = 0; k < 15; k++) {
-      ctx.beginPath();
-      const sx = Math.random() * width;
-      const sy = Math.random() * height;
-      ctx.moveTo(sx, sy);
-      ctx.lineTo(sx + (Math.random() - 0.5) * 60 * scaleFactor, sy + (Math.random() - 0.5) * 60 * scaleFactor);
-      ctx.stroke();
+    const pattern = getDistressedPattern(ctx);
+    if (pattern) {
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, width, height);
     }
   }
   ctx.restore();
@@ -681,3 +816,6 @@ function getFontFamilyString(fontId) {
   };
   return map[fontId] || "Caveat, cursive";
 }
+
+
+
