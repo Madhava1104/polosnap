@@ -1,0 +1,14 @@
+.git
+.github
+node_modules
+dist
+dist-ssr
+public/uploads/*
+!public/uploads/.gitkeep
+*.log
+*.local
+.vscode
+.idea
+.DS_Store
+Dockerfile
+.dockerignore
