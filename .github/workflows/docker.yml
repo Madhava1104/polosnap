@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: harbor.rentro.space
-  IMAGE: harbor.rentro.space/polosnap/polosnap
+  IMAGE: harbor.rentro.space/static/polosnap
 
 jobs:
   docker:

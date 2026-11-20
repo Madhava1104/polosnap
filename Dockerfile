@@ -12,9 +12,18 @@ ENV NODE_ENV=production \
     PORT=9201
 WORKDIR /app
 
-# Production dependencies only (express etc.)
+# Pull the latest Alpine security patches
+RUN apk upgrade --no-cache
+
+# Production dependencies only (express etc.), then remove npm/yarn/corepack:
+# the app runs with plain "node", and their bundled dependencies are where
+# most of the scanner's High findings in the Node base image come from.
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm ci --omit=dev \
+ && npm cache clean --force \
+ && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+           /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+           /usr/local/bin/yarn /usr/local/bin/yarnpkg /opt/yarn-* /root/.npm
 
 COPY --from=build /app/dist ./dist
 COPY server.js ./
