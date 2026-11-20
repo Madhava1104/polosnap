@@ -186,33 +186,24 @@ npm start
 The Express server serves the optimized production bundle and handles image uploads on `http://localhost:5173` (or the configured `PORT`).
 
 ### 6. Run with Docker
-The Docker image runs the Express server (`server.js`) on port `9201`, serving the production build and the `/api/upload` endpoint. GitHub Actions builds it on every push to `main` and pushes it to Harbor as `harbor.rentro.space/static/polosnap`.
-
-Uploaded photos are saved to `/app/public/uploads` inside the container, so mount a folder there to keep them across updates. The container runs as the `node` user (uid 1000), which needs write access to that folder.
+The Docker image runs the Express server (`server.js`) on port `9201`, serving the production build and the `/api/upload` endpoint.
 
 ```bash
-sudo mkdir -p /mnt/data1tb/polosnap/uploads
-sudo chown 1000:1000 /mnt/data1tb/polosnap/uploads
-
-docker login harbor.rentro.space
+docker build -t polosnap .
 docker run -d --name polosnap --restart unless-stopped \
   -p 9201:9201 \
-  -v /mnt/data1tb/polosnap/uploads:/app/public/uploads \
-  harbor.rentro.space/static/polosnap:latest
+  -v polosnap-uploads:/app/public/uploads \
+  polosnap
 ```
 Open `http://localhost:9201`.
 
-To update to the newest image:
-```bash
-docker pull harbor.rentro.space/static/polosnap:latest
-docker rm -f polosnap
-# then run the same docker run command again
-```
+Uploaded photos are saved in the `polosnap-uploads` Docker volume, so they are kept when the container is updated or recreated.
 
-To build and run the image locally instead:
+To update after pulling new code:
 ```bash
 docker build -t polosnap .
-docker run --rm -p 9201:9201 polosnap
+docker rm -f polosnap
+# then run the same docker run command again
 ```
 
 **Image tags:** `latest` (newest build of `main`), the short commit SHA (for example `1112318`), and `1.2.3` when a `v1.2.3` git tag is pushed.

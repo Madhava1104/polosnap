@@ -1,4 +1,4 @@
-name: Build and push to Harbor
+name: Build and push image
 
 on:
   push:
@@ -6,9 +6,13 @@ on:
     tags: ['v*']
   workflow_dispatch:
 
+# The registry address comes from a secret, so it shows as *** in the public logs
 env:
-  REGISTRY: harbor.rentro.space
-  IMAGE: harbor.rentro.space/static/polosnap
+  IMAGE: ${{ secrets.HARBOR_REGISTRY }}/static/polosnap
+  # Don't attach the build record / summary to the run: they would contain
+  # the registry address unmasked, and run artifacts are public on public repos.
+  DOCKER_BUILD_SUMMARY: false
+  DOCKER_BUILD_RECORD_UPLOAD: false
 
 jobs:
   docker:
@@ -22,10 +26,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Log in to Harbor
+      - name: Log in to registry
         uses: docker/login-action@v4
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ${{ secrets.HARBOR_REGISTRY }}
           username: ${{ secrets.HARBOR_USERNAME }}
           password: ${{ secrets.HARBOR_PASSWORD }}
 
@@ -47,6 +51,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          provenance: false   # keeps a single clean image in Harbor (no "unknown/unknown" attestation entry)
+          provenance: false   # keeps a single clean image in the registry (no "unknown/unknown" attestation entry)
           cache-from: type=gha
           cache-to: type=gha,mode=max
